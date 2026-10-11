@@ -1,0 +1,28 @@
+# Python Cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+
+# Environments
+env/
+venv/
+ENV/
+.venv/
+
+# Large Generation Outputs & Cache
+outputs/
+instaloader_cache/
+scratch/
+
+# User Media (Keep directory with .gitkeep)
+inputs/*
+!inputs/.gitkeep
+
+# IDE & OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.log

@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>InstaClone Studio • Autonomous Carousel Engine</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;1,600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="logo-area">
+        <div class="logo-icon">📸</div>
+        <div>
+          <h1 class="logo-title">InstaClone <span>Studio</span></h1>
+          <p class="logo-sub">Autonomous Instagram Carousel & Story Cloning Engine</p>
+        </div>
+      </div>
+      <div class="header-badges">
+        <span class="badge badge-glow">⚡ 100% Local & Offline</span>
+        <span class="badge">🎯 Face-Aware Smart Crop</span>
+        <span class="badge">✨ Decal & Sticker Replication</span>
+      </div>
+    </header>
+
+    <!-- Main Grid -->
+    <main class="main-grid">
+      <!-- Left Column: Controls & Input -->
+      <section class="control-panel card">
+        <h2 class="section-title"><span class="step-num">1</span> Target Instagram Post</h2>
+        <p class="section-desc">Paste any Instagram Post URL you want to clone the layouts and aesthetics from.</p>
+        
+        <div class="url-input-group">
+          <input type="text" id="postUrlInput" placeholder="https://www.instagram.com/p/Dd0jQD2jF1v/" value="https://www.instagram.com/p/Dd0jQD2jF1v/">
+          <button id="pasteBtn" class="btn btn-secondary">📋 Paste</button>
+        </div>
+        
+        <div class="preset-chips">
+          <span class="chips-label">Presets:</span>
+          <button class="chip" data-url="https://www.instagram.com/p/Dd0jQD2jF1v/">🌴 Goa Scrapbook (Dd0jQD2)</button>
+          <button class="chip" data-url="https://www.instagram.com/p/CfJtw_zP6tW/">💍 Gayle Minimalist (CfJtw_z)</button>
+        </div>
+
+        <hr class="divider">
+
+        <div class="media-section-header">
+          <h2 class="section-title"><span class="step-num">2</span> My Multimedia Inputs</h2>
+          <span id="mediaCountBadge" class="badge">0 Files</span>
+        </div>
+        <p class="section-desc">Your personal photos and videos that will be mapped into the cloned layout slots.</p>
+
+        <!-- Drag & Drop Upload Zone -->
+        <div id="dropZone" class="drop-zone">
+          <div class="drop-icon">📁</div>
+          <p class="drop-text" id="dropText">Drag & drop photos or videos here</p>
+          <div class="drop-actions">
+            <span class="drop-sub">or</span>
+            <button type="button" id="browseBtn" class="browse-btn">📂 Browse Files</button>
+          </div>
+        </div>
+        <!-- Hidden file input placed outside dropZone to completely prevent click recursion / bubbling bugs -->
+        <input type="file" id="fileInput" multiple accept="image/*,video/*" style="display:none;">
+
+        <!-- Media Grid Preview -->
+        <div class="media-tray-container">
+          <div id="mediaGrid" class="media-grid">
+            <!-- Dynamic items loaded here -->
+          </div>
+        </div>
+
+        <hr class="divider">
+
+        <!-- Action Button -->
+        <button id="cloneBtn" class="btn btn-primary btn-cta">
+          <span class="btn-icon">🚀</span>
+          <span>Clone & Generate Post</span>
+        </button>
+      </section>
+
+      <!-- Right Column: Live Status & Output Gallery -->
+      <section class="output-panel card">
+        <!-- Progress Stepper (Initially Hidden) -->
+        <div id="progressContainer" class="progress-container" style="display: none;">
+          <h3 class="progress-title">⚡ Autonomous Pipeline in Progress</h3>
+          <div class="progress-bar-bg">
+            <div id="progressBar" class="progress-bar-fill" style="width: 0%;"></div>
+          </div>
+          <p id="progressMessage" class="progress-msg">Initializing engine...</p>
+
+          <div class="stepper">
+            <div id="step1" class="step-item"><span class="step-dot"></span> 1. Harvest Slides</div>
+            <div id="step2" class="step-item"><span class="step-dot"></span> 2. Analyze Layouts</div>
+            <div id="step3" class="step-item"><span class="step-dot"></span> 3. Smart Crop & Align</div>
+            <div id="step4" class="step-item"><span class="step-dot"></span> 4. Render Slides</div>
+            <div id="step5" class="step-item"><span class="step-dot"></span> 5. Compile Reel</div>
+          </div>
+        </div>
+
+        <!-- Output Showcase -->
+        <div id="outputShowcase" class="output-showcase">
+          <div class="output-header">
+            <div>
+              <h2 class="section-title">✨ Cloned Carousel Package</h2>
+              <p class="section-desc">Instagram Feed (4:5) ready slides + Full continuous Story/Reel.</p>
+            </div>
+            <button id="downloadZipBtn" class="btn btn-download-zip" style="display: none;">
+              <span>📦 Download All (.ZIP)</span>
+            </button>
+          </div>
+
+          <!-- Empty State -->
+          <div id="emptyState" class="empty-state">
+            <div class="empty-icon">🎨</div>
+            <h3>Ready to Clone</h3>
+            <p>Paste an Instagram Post URL and click "Clone & Generate Post" to autonomously generate matching slides with your personal media.</p>
+          </div>
+
+          <!-- Active Results -->
+          <div id="resultsContainer" class="results-container" style="display: none;">
+            <!-- View Mode Switcher -->
+            <div class="tab-switcher">
+              <button id="tabSlides" class="tab-btn active">📑 Individual Slides</button>
+              <button id="tabReel" class="tab-btn">🎬 Full Reel / Story Video</button>
+            </div>
+
+            <!-- Slides Gallery View -->
+            <div id="slidesView" class="slides-view">
+              <div id="slideTabs" class="slide-tabs">
+                <!-- Slide selector tabs (1..N) -->
+              </div>
+              <div class="slide-main-stage">
+                <div class="slide-preview-frame">
+                  <img id="activeSlideImg" src="" alt="Active Slide Preview" class="slide-stage-img">
+                  <video id="activeSlideVid" controls style="display: none;" class="slide-stage-vid"></video>
+                </div>
+                <div class="slide-actions-bar">
+                  <span id="activeSlideTitle" class="slide-info-title">Slide 1</span>
+                  <div class="slide-action-btns">
+                    <button id="btnOpenBuilder" type="button" class="btn btn-sm btn-primary">🎨 Customize in Story Builder</button>
+                    <a id="btnDownloadJpg" href="#" download class="btn btn-sm btn-secondary">📥 Download JPG</a>
+                    <a id="btnDownloadMp4" href="#" download class="btn btn-sm btn-secondary">🎥 Download MP4</a>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Continuous Reel View -->
+            <div id="reelView" class="reel-view" style="display: none;">
+              <div class="reel-player-container">
+                <video id="reelVideoPlayer" controls class="reel-player"></video>
+              </div>
+              <div class="reel-actions-bar">
+                <div>
+                  <h4>Continuous Multi-Slide Reel</h4>
+                  <p>1080x1350 • Seamless transitions • Ready for Instagram Story or Reel</p>
+                </div>
+                <a id="btnDownloadReel" href="#" download class="btn btn-primary">📥 Download Reel MP4</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Interactive Story & Layout Builder Modal -->
+  <div id="storyBuilderModal" class="modal-backdrop builder-modal-backdrop">
+    <div class="builder-modal-card">
+      <div class="builder-header">
+        <div class="builder-title-area">
+          <div class="builder-icon">🎨</div>
+          <div>
+            <h3 class="builder-title">Instagram Story & Layout Builder</h3>
+            <p class="builder-subtitle" id="builderSlideSubtitle">Interactive drag, resize, swap & customize for Slide 1</p>
+          </div>
+        </div>
+        <div class="builder-header-actions">
+          <button id="builderAddCardBtn" type="button" class="btn btn-sm btn-secondary">➕ Add Card</button>
+          <button id="builderAddStickerBtn" type="button" class="btn btn-sm btn-secondary">🌟 Add Sticker</button>
+          <button id="builderAddPillBtn" type="button" class="btn btn-sm btn-secondary">📍 Add Location</button>
+          <button id="builderAddCaptionBtn" type="button" class="btn btn-sm btn-secondary">✍️ Add Text</button>
+          <button id="builderResetBtn" type="button" class="btn btn-sm btn-secondary">↺ Reset</button>
+          <button id="builderSaveBtn" type="button" class="btn btn-sm btn-primary">💾 Save & Re-render</button>
+          <button id="builderCloseBtn" type="button" class="btn btn-sm btn-secondary">✕</button>
+        </div>
+      </div>
+
+      <div class="builder-body">
+        <!-- Interactive 1080x1350 canvas stage (scaled down to 400x500 for display) -->
+        <div class="builder-stage-wrapper">
+          <div id="builderStage" class="builder-stage">
+            <!-- Dynamic draggable & resizable cards and stickers injected here -->
+          </div>
+          <div class="stage-hint">💡 Drag cards/stickers • Drag corner handles to resize • Double-click card to pan photo inside</div>
+        </div>
+
+        <!-- Sidebar: Card Inspector, Photo Crop & Zoom, Media Swapper & Stickers -->
+        <div class="builder-sidebar">
+          <!-- Card Inspector Section -->
+          <div class="sidebar-section">
+            <h4 class="sidebar-heading">Card Inspector</h4>
+            <div id="cardInspectorEmpty" class="inspector-empty">Click on any card on the canvas to edit position, crop & zoom.</div>
+            <div id="cardInspectorContent" style="display: none;" class="inspector-content">
+              <div class="inspector-field">
+                <label>Position & Size (1080x1350 scale)</label>
+                <div class="coords-grid">
+                  <span>X: <strong id="valX">0</strong>px</span>
+                  <span>Y: <strong id="valY">0</strong>px</span>
+                  <span>W: <strong id="valW">0</strong>px</span>
+                  <span>H: <strong id="valH">0</strong>px</span>
+                </div>
+              </div>
+
+              <div class="inspector-field">
+                <label>Nudge Position</label>
+                <div class="nudge-btns">
+                  <button type="button" class="btn-nudge" data-dir="up">⬆️</button>
+                  <button type="button" class="btn-nudge" data-dir="left">⬅️</button>
+                  <button type="button" class="btn-nudge" data-dir="right">➡️</button>
+                  <button type="button" class="btn-nudge" data-dir="down">⬇️</button>
+                </div>
+              </div>
+
+              <!-- Card Style Selector -->
+              <div class="inspector-field">
+                <label>Card Border Style</label>
+                <div class="style-selector-row">
+                  <button type="button" class="btn-card-style active" data-style="rounded">🔘 Clean Rounded</button>
+                  <button type="button" class="btn-card-style" data-style="torn_paper">📜 Torn Paper Scrapbook</button>
+                </div>
+              </div>
+
+              <!-- In-Card Photo Alignment & Zoom -->
+              <div class="inspector-field photo-align-box">
+                <div class="field-header-row">
+                  <label>🖼️ In-Card Crop, Zoom & Pan</label>
+                  <button type="button" id="btnResetCrop" class="btn-text-sm">🎯 Reset Center</button>
+                </div>
+                <div class="slider-control-group">
+                  <div class="slider-row">
+                    <span>🔍 Zoom: <strong id="zoomVal">1.0x</strong></span>
+                    <input type="range" id="zoomInput" min="1.0" max="2.5" step="0.05" value="1.0" class="slider-input">
+                  </div>
+                  <div class="slider-row">
+                    <span>↔️ Pan X: <strong id="panXVal">0%</strong></span>
+                    <input type="range" id="panXInput" min="-50" max="50" step="1" value="0" class="slider-input">
+                  </div>
+                  <div class="slider-row">
+                    <span>↕️ Pan Y: <strong id="panYVal">0%</strong></span>
+                    <input type="range" id="panYInput" min="-50" max="50" step="1" value="0" class="slider-input">
+                  </div>
+                </div>
+                <button type="button" id="btnTogglePanMode" class="btn btn-sm btn-secondary pan-mode-btn">
+                  <span>🖐️ Direct Mouse Pan inside Card</span>
+                </button>
+                <div class="pan-mode-hint" id="panModeHint" style="display: none;">
+                  💡 Drag directly inside the card to pan photo. Click again when done.
+                </div>
+              </div>
+
+              <div class="inspector-field">
+                <label>Corner Radius: <span id="radiusVal">14px</span></label>
+                <input type="range" id="radiusInput" min="0" max="32" value="14" class="slider-input">
+              </div>
+
+              <div class="inspector-field">
+                <label>Card Shadow</label>
+                <label class="toggle-label"><input type="checkbox" id="shadowToggle" checked> Enable soft drop shadow</label>
+              </div>
+
+              <button type="button" id="deleteCardBtn" class="btn btn-sm btn-danger" style="margin-top: 8px;">🗑️ Delete Selected Card</button>
+            </div>
+          </div>
+
+          <!-- Sticker Inspector Section (Shown when a sticker is active) -->
+          <div id="stickerInspector" class="sidebar-section" style="display: none;">
+            <div class="field-header-row">
+              <h4 class="sidebar-heading" id="selectedStickerTitle">Sticker Inspector</h4>
+              <button type="button" id="deleteStickerBtn" class="btn btn-sm btn-danger">🗑️ Remove</button>
+            </div>
+            <div class="inspector-field">
+              <label>Size: <span id="stickerSizeVal">180px</span></label>
+              <input type="range" id="stickerSizeInput" min="40" max="450" value="180" class="slider-input">
+            </div>
+            <div class="inspector-field">
+              <label>Rotation: <span id="stickerRotVal">0°</span></label>
+              <input type="range" id="stickerRotInput" min="-180" max="180" value="0" class="slider-input">
+            </div>
+            <div class="inspector-field">
+              <label>Nudge Sticker</label>
+              <div class="nudge-btns">
+                <button type="button" class="btn-nudge-st" data-dir="up">⬆️</button>
+                <button type="button" class="btn-nudge-st" data-dir="left">⬅️</button>
+                <button type="button" class="btn-nudge-st" data-dir="right">➡️</button>
+                <button type="button" class="btn-nudge-st" data-dir="down">⬇️</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Sticker & Decor Library -->
+          <div class="sidebar-section">
+            <div class="field-header-row">
+              <h4 class="sidebar-heading">🌟 Stickers & Beach Cutouts</h4>
+              <div class="header-btns-group">
+                <button type="button" id="btnUploadSticker" class="btn-text-sm" title="Upload transparent PNG sticker">📁 Upload PNG</button>
+                <input type="file" id="stickerFileInput" accept="image/png,image/webp,image/jpeg" style="display: none;">
+                <button type="button" id="btnCustomEmoji" class="btn-text-sm">✨ Emoji</button>
+              </div>
+            </div>
+            
+            <!-- Sticker Search & Filter -->
+            <div class="sticker-search-bar">
+              <input type="text" id="stickerSearchInput" placeholder="🔍 Search stickers (starfish, shell, wave, palm...)" class="sticker-input">
+            </div>
+            <div class="sticker-categories-bar">
+              <button type="button" class="st-cat-btn active" data-cat="all">All (94+)</button>
+              <button type="button" class="st-cat-btn" data-cat="beach">🏝️ Beach</button>
+              <button type="button" class="st-cat-btn" data-cat="doodles">✏️ CC0 Doodles</button>
+              <button type="button" class="st-cat-btn" data-cat="tropical">🌴 Tropical</button>
+              <button type="button" class="st-cat-btn" data-cat="travel">✈️ Travel</button>
+              <button type="button" class="st-cat-btn" data-cat="vintage">📷 Vintage</button>
+              <button type="button" class="st-cat-btn" data-cat="decor">🎀 Decor</button>
+            </div>
+            <div class="license-safe-tag">
+              <span>🛡️ <strong>100% Commercial-Safe</strong>: CC0 Public Domain & Open Licensed</span>
+            </div>
+
+            <div id="builderStickersTray" class="builder-stickers-tray">
+              <!-- Dynamically populated from /api/stickers -->
+            </div>
+            <div class="quick-emojis-row">
+              <span class="quick-emoji" data-emoji="🐚" title="Conch">🐚</span>
+              <span class="quick-emoji" data-emoji="🌊" title="Wave">🌊</span>
+              <span class="quick-emoji" data-emoji="🌴" title="Palm">🌴</span>
+              <span class="quick-emoji" data-emoji="🌺" title="Hibiscus">🌺</span>
+              <span class="quick-emoji" data-emoji="☀️" title="Sun">☀️</span>
+              <span class="quick-emoji" data-emoji="🥥" title="Coconut">🥥</span>
+              <span class="quick-emoji" data-emoji="📸" title="Camera">📸</span>
+              <span class="quick-emoji" data-emoji="✨" title="Sparkle">✨</span>
+              <span class="quick-emoji" data-emoji="💖" title="Heart">💖</span>
+            </div>
+          </div>
+
+          <!-- Swap Photo / Video Section -->
+          <div class="sidebar-section">
+            <h4 class="sidebar-heading">Swap Photo / Video</h4>
+            <p class="sidebar-sub">Click any uploaded media to place it into the selected card:</p>
+            <div id="builderMediaTray" class="builder-media-tray">
+              <!-- Dynamically populated from uploaded media -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Custom Delete Confirmation Modal -->
+  <div id="deleteModal" class="modal-backdrop">
+    <div class="modal-card">
+      <div class="modal-icon">🗑️</div>
+      <h3 class="modal-title">Remove Media File?</h3>
+      <p class="modal-text" id="deleteModalText">Are you sure you want to remove this media asset from your inputs?</p>
+      <div class="modal-actions">
+        <button id="cancelDeleteBtn" type="button" class="btn btn-secondary">Cancel</button>
+        <button id="confirmDeleteBtn" type="button" class="btn btn-danger">Delete File</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notifications Container -->
+  <div id="toastContainer" class="toast-container"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
