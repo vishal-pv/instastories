@@ -160,6 +160,8 @@ export class Inspector {
         if (this.options.onDeleteItem) this.options.onDeleteItem("sticker");
       });
     }
+  }
+
   updateLiveCoords(x, y) {
     if (this.valX) this.valX.textContent = Math.round(x);
     if (this.valY) this.valY.textContent = Math.round(y);

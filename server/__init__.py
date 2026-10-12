@@ -1,6 +1,6 @@
 from flask import Flask, send_from_directory
 from flask_cors import CORS
-from server.config import STATIC_DIR, MAX_CONTENT_LENGTH
+from server.config import STATIC_DIR, MAX_CONTENT_LENGTH, OUTPUTS_DIR
 from server.routes.media import media_bp
 from server.routes.stickers import stickers_bp
 from server.routes.clone import clone_bp
@@ -23,5 +23,9 @@ def create_app():
     @app.route("/")
     def index():
         return send_from_directory(app.static_folder, "index.html")
+
+    @app.route("/outputs/<path:filepath>")
+    def serve_output(filepath):
+        return send_from_directory(OUTPUTS_DIR, filepath)
 
     return app

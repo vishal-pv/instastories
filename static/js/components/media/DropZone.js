@@ -44,12 +44,22 @@ export class DropZone {
     if (this.browseBtnEl) {
       this.browseBtnEl.addEventListener("click", (e) => {
         e.stopPropagation();
-        this.fileInputEl.click();
+        // If not a label (which natively triggers fileInput), trigger manually
+        if (this.browseBtnEl.tagName !== "LABEL") {
+          this.fileInputEl.click();
+        }
+      });
+
+      this.browseBtnEl.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          this.fileInputEl.click();
+        }
       });
     }
 
     this.dropZoneEl.addEventListener("click", (e) => {
-      if (e.target !== this.browseBtnEl) {
+      if (e.target !== this.browseBtnEl && !this.browseBtnEl.contains(e.target)) {
         this.fileInputEl.click();
       }
     });
