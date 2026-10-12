@@ -74,6 +74,7 @@ export class TransformGizmo {
     let rafId = null;
 
     const onPointerMove = (moveEv) => {
+      moveEv.preventDefault();
       const dx = moveEv.clientX - startX;
       const dy = moveEv.clientY - startY;
 
@@ -146,7 +147,7 @@ export class TransformGizmo {
       if (this.onTransformEnd) this.onTransformEnd({ type: "resize" });
     };
 
-    window.addEventListener("pointermove", onPointerMove);
+    window.addEventListener("pointermove", onPointerMove, { passive: false });
     window.addEventListener("pointerup", onPointerUp);
     window.addEventListener("pointercancel", onPointerUp);
   }
@@ -164,6 +165,7 @@ export class TransformGizmo {
     let rafId = null;
 
     const onPointerMove = (moveEv) => {
+      moveEv.preventDefault();
       const angleRad = Math.atan2(moveEv.clientY - centerY, moveEv.clientX - centerX);
       let angleDeg = Math.round((angleRad * (180 / Math.PI)) + 90);
 
@@ -207,7 +209,7 @@ export class TransformGizmo {
       if (this.onTransformEnd) this.onTransformEnd({ type: "rotate" });
     };
 
-    window.addEventListener("pointermove", onPointerMove);
+    window.addEventListener("pointermove", onPointerMove, { passive: false });
     window.addEventListener("pointerup", onPointerUp);
     window.addEventListener("pointercancel", onPointerUp);
   }

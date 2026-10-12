@@ -2,7 +2,7 @@
 // Master Story Builder Stage Coordinator
 // ==========================================================================
 
-import { to1080X, to1080Y, to1080W, to1080H } from "../../utils/math.js";
+import { to1080X, to1080Y, to1080W, to1080H, toDisplayW, toDisplayH } from "../../utils/math.js";
 import { TransformGizmo } from "./TransformGizmo.js";
 import { FloatingToolbar } from "./FloatingToolbar.js";
 import { MagneticGuides } from "./MagneticGuides.js";
@@ -295,15 +295,68 @@ export class Stage {
   }
 
   selectItem(selection) {
+    if (!selection) {
+      this.deselect();
+      return;
+    }
+
+    const isSame = this.selectedItem &&
+      this.selectedItem.type === selection.type &&
+      this.selectedItem.index === selection.index;
+
     this.selectedItem = selection;
-    this.panModeSlotIdx = null; // exit pan mode on new selection
-    this.render();
+    this.panModeSlotIdx = null;
+
+    if (isSame) {
+      this.inspector.updateSelection(this.selectedItem, this.slideData, false);
+      return;
+    }
+
+    this.updateSelectionUI(selection);
+  }
+
+  updateSelectionUI(selection) {
+    this.stageEl.querySelectorAll(".builder-card.selected, .builder-sticker.selected, .builder-pill.selected, .builder-caption.selected").forEach(el => {
+      el.classList.remove("selected");
+    });
+
+    this.magneticGuides.hideAll();
+
+    let targetEl = null;
+    let isCard = false;
+
+    if (selection.type === "card") {
+      targetEl = this.stageEl.querySelector(`.builder-card[data-slot-index="${selection.index}"]`);
+      isCard = true;
+    } else if (selection.type === "sticker") {
+      targetEl = this.stageEl.querySelector(`.builder-sticker[data-sticker-index="${selection.index}"], .builder-pill[data-sticker-index="${selection.index}"], .builder-caption[data-sticker-index="${selection.index}"]`);
+      isCard = false;
+    }
+
+    if (targetEl) {
+      targetEl.classList.add("selected");
+      this.gizmo.attach(targetEl, { isCard });
+      this.floatingToolbar.render(targetEl, isCard);
+    } else {
+      this.gizmo.detach();
+      this.floatingToolbar.destroy();
+    }
+
+    const currentSlot = (selection.type === "card") ? this.slideData.slots[selection.index] : null;
+    this.inspector.updateSelection(selection, this.slideData, false);
+    this.inspector.loadMediaSwapper(this.mediaFiles, currentSlot);
   }
 
   deselect() {
     this.selectedItem = null;
     this.panModeSlotIdx = null;
-    this.render();
+    this.gizmo.detach();
+    this.floatingToolbar.destroy();
+    this.magneticGuides.hideAll();
+    this.stageEl.querySelectorAll(".builder-card.selected, .builder-sticker.selected, .builder-pill.selected, .builder-caption.selected").forEach(el => {
+      el.classList.remove("selected");
+    });
+    this.inspector.updateSelection(null, this.slideData, false);
   }
 
   commitHistory() {
@@ -510,8 +563,31 @@ export class Stage {
     if (!slot) return;
 
     slot[update.field] = update.value;
+
+    const cardEl = this.stageEl.querySelector(`.builder-card[data-slot-index="${this.selectedItem.index}"]`);
+    if (cardEl) {
+      if (update.field === "zoom" || update.field === "pan_x" || update.field === "pan_y") {
+        const mediaEl = cardEl.querySelector(".builder-card-media-wrap img, .builder-card-media-wrap video");
+        if (mediaEl) {
+          const z = slot.zoom !== undefined ? slot.zoom : 1.0;
+          const px = slot.pan_x !== undefined ? slot.pan_x : 0;
+          const py = slot.pan_y !== undefined ? slot.pan_y : 0;
+          mediaEl.style.transform = `scale(${z}) translate(${px}%, ${py}%)`;
+        }
+      } else if (update.field === "corner_radius") {
+        cardEl.style.borderRadius = `${update.value}px`;
+      } else if (update.field === "shadow") {
+        cardEl.style.boxShadow = update.value ? "" : "none";
+      } else if (update.field === "card_style") {
+        if (update.value === "torn_paper") {
+          cardEl.classList.add("style-torn");
+        } else {
+          cardEl.classList.remove("style-torn");
+        }
+      }
+    }
+
     this.commitHistory();
-    this.render();
   }
 
   updateActiveSticker(update) {
@@ -519,15 +595,23 @@ export class Stage {
     const st = this.slideData.stickers[this.selectedItem.index];
     if (!st) return;
 
+    const stEl = this.stageEl.querySelector(`[data-sticker-index="${this.selectedItem.index}"]`);
+
     if (update.field === "size") {
       st.w = update.value;
       st.h = update.value;
+      if (stEl) {
+        stEl.style.width = `${toDisplayW(st.w)}px`;
+        stEl.style.height = `${toDisplayH(st.h)}px`;
+      }
     } else if (update.field === "rotation") {
       st.rotation = update.value;
+      if (stEl) {
+        stEl.style.transform = `rotate(${st.rotation}deg)`;
+      }
     }
 
     this.commitHistory();
-    this.render();
   }
 
   swapMedia(mediaName) {

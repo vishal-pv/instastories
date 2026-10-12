@@ -169,6 +169,7 @@ export class StickerController {
       if (e.target.closest(".canva-floating-pill") || e.target.closest(".gizmo-handle") || e.target.closest(".gizmo-rot-handle")) {
         return;
       }
+      e.preventDefault(); // CRITICAL: Completely prevents browser HTML5 ghost drag
       e.stopPropagation();
 
       if (this.options.onSelect) {
@@ -198,6 +199,7 @@ export class StickerController {
     let snapActiveY = false;
 
     const onPointerMove = (moveEv) => {
+      moveEv.preventDefault();
       const deltaX = moveEv.clientX - startX;
       const deltaY = moveEv.clientY - startY;
 
@@ -253,7 +255,7 @@ export class StickerController {
       }
     };
 
-    window.addEventListener("pointermove", onPointerMove);
+    window.addEventListener("pointermove", onPointerMove, { passive: false });
     window.addEventListener("pointerup", onPointerUp);
     window.addEventListener("pointercancel", onPointerUp);
   }

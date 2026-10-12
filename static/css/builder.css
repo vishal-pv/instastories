@@ -155,9 +155,17 @@
   overflow: visible;
   user-select: none;
   -webkit-user-select: none;
+  -webkit-user-drag: none;
+  user-drag: none;
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
-  will-change: transform;
+  will-change: transform, left, top;
   transform: translate3d(0, 0, 0);
+  transition: outline 0.15s ease, box-shadow 0.15s ease;
+}
+
+.builder-card:not(.selected):hover {
+  outline: 2px solid rgba(99, 102, 241, 0.6);
+  cursor: grab;
 }
 
 .builder-card:active {
@@ -183,6 +191,10 @@
   position: relative;
   border-radius: inherit;
   pointer-events: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-user-drag: none;
+  user-drag: none;
 }
 
 .builder-card-media-wrap img,
@@ -193,6 +205,10 @@
   pointer-events: none;
   display: block;
   transform-origin: center center;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-user-drag: none;
+  user-drag: none;
   /* Transitions removed for instantaneous zero-latency pan & zoom */
   will-change: transform;
 }
@@ -215,12 +231,20 @@
   touch-action: none;
   user-select: none;
   -webkit-user-select: none;
+  -webkit-user-drag: none;
+  user-drag: none;
   z-index: 35;
   display: flex;
   align-items: center;
   justify-content: center;
   transform-origin: center center;
-  will-change: transform;
+  will-change: transform, left, top;
+  transition: outline 0.15s ease;
+}
+
+.builder-sticker:not(.selected):hover {
+  outline: 2px solid rgba(236, 72, 153, 0.6);
+  cursor: grab;
 }
 
 .builder-sticker:active {
@@ -233,7 +257,20 @@
   cursor: grabbing !important;
   user-select: none !important;
   -webkit-user-select: none !important;
+  -webkit-user-drag: none !important;
+  user-drag: none !important;
   transition: none !important;
+}
+
+/* Hide floating toolbar and gizmo handles while actively dragging for clean Canva feel */
+.builder-stage.is-dragging .canva-floating-pill,
+.builder-stage.is-dragging .card-floating-toolbar,
+.builder-stage.is-dragging .gizmo-handle,
+.builder-stage.is-dragging .gizmo-rot-stem,
+.builder-stage.is-dragging .gizmo-rot-handle {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  transition: opacity 0.1s ease;
 }
 
 .builder-sticker.selected {
