@@ -57,6 +57,8 @@ export class TransformGizmo {
   startResize(e, pos) {
     e.stopPropagation();
     e.preventDefault();
+    try { e.target.setPointerCapture(e.pointerId); } catch (_) {}
+    this.stageEl.classList.add("is-dragging");
 
     const startX = e.clientX;
     const startY = e.clientY;
@@ -65,14 +67,20 @@ export class TransformGizmo {
     const origW = parseFloat(this.target.style.width) || this.target.offsetWidth;
     const origH = parseFloat(this.target.style.height) || this.target.offsetHeight;
 
+    let newLeft = origLeft;
+    let newTop = origTop;
+    let newW = origW;
+    let newH = origH;
+    let rafId = null;
+
     const onPointerMove = (moveEv) => {
       const dx = moveEv.clientX - startX;
       const dy = moveEv.clientY - startY;
 
-      let newLeft = origLeft;
-      let newTop = origTop;
-      let newW = origW;
-      let newH = origH;
+      newLeft = origLeft;
+      newTop = origTop;
+      newW = origW;
+      newH = origH;
 
       if (pos.includes("e")) newW = Math.max(25, origW + dx);
       if (pos.includes("s")) newH = Math.max(25, origH + dy);
@@ -101,40 +109,59 @@ export class TransformGizmo {
         }
       }
 
-      this.target.style.left = `${newLeft}px`;
-      this.target.style.top = `${newTop}px`;
-      this.target.style.width = `${newW}px`;
-      this.target.style.height = `${newH}px`;
+      if (!rafId) {
+        rafId = requestAnimationFrame(() => {
+          this.target.style.left = `${newLeft}px`;
+          this.target.style.top = `${newTop}px`;
+          this.target.style.width = `${newW}px`;
+          this.target.style.height = `${newH}px`;
 
-      if (this.onTransform) {
-        this.onTransform({
-          type: "resize",
-          pos,
-          left: newLeft,
-          top: newTop,
-          width: newW,
-          height: newH
+          if (this.onTransform) {
+            this.onTransform({
+              type: "resize",
+              pos,
+              left: newLeft,
+              top: newTop,
+              width: newW,
+              height: newH
+            });
+          }
+          rafId = null;
         });
       }
     };
 
     const onPointerUp = () => {
+      try { e.target.releasePointerCapture(e.pointerId); } catch (_) {}
       window.removeEventListener("pointermove", onPointerMove);
       window.removeEventListener("pointerup", onPointerUp);
+      window.removeEventListener("pointercancel", onPointerUp);
+
+      if (rafId) {
+        cancelAnimationFrame(rafId);
+        rafId = null;
+      }
+
+      this.stageEl.classList.remove("is-dragging");
       if (this.onTransformEnd) this.onTransformEnd({ type: "resize" });
     };
 
     window.addEventListener("pointermove", onPointerMove);
     window.addEventListener("pointerup", onPointerUp);
+    window.addEventListener("pointercancel", onPointerUp);
   }
 
   startRotate(e) {
     e.stopPropagation();
     e.preventDefault();
+    try { e.target.setPointerCapture(e.pointerId); } catch (_) {}
+    this.stageEl.classList.add("is-dragging");
 
     const rect = this.target.getBoundingClientRect();
     const centerX = rect.left + rect.width / 2;
     const centerY = rect.top + rect.height / 2;
+    let currentAngle = 0;
+    let rafId = null;
 
     const onPointerMove = (moveEv) => {
       const angleRad = Math.atan2(moveEv.clientY - centerY, moveEv.clientX - centerX);
@@ -149,23 +176,39 @@ export class TransformGizmo {
       if (Math.abs(angleDeg - 90) <= 3) angleDeg = 90;
       if (Math.abs(angleDeg + 90) <= 3) angleDeg = -90;
 
-      this.target.style.transform = `rotate(${angleDeg}deg)`;
+      currentAngle = angleDeg;
 
-      if (this.onTransform) {
-        this.onTransform({
-          type: "rotate",
-          rotation: angleDeg
+      if (!rafId) {
+        rafId = requestAnimationFrame(() => {
+          this.target.style.transform = `rotate(${currentAngle}deg)`;
+          if (this.onTransform) {
+            this.onTransform({
+              type: "rotate",
+              rotation: currentAngle
+            });
+          }
+          rafId = null;
         });
       }
     };
 
     const onPointerUp = () => {
+      try { e.target.releasePointerCapture(e.pointerId); } catch (_) {}
       window.removeEventListener("pointermove", onPointerMove);
       window.removeEventListener("pointerup", onPointerUp);
+      window.removeEventListener("pointercancel", onPointerUp);
+
+      if (rafId) {
+        cancelAnimationFrame(rafId);
+        rafId = null;
+      }
+
+      this.stageEl.classList.remove("is-dragging");
       if (this.onTransformEnd) this.onTransformEnd({ type: "rotate" });
     };
 
     window.addEventListener("pointermove", onPointerMove);
     window.addEventListener("pointerup", onPointerUp);
+    window.addEventListener("pointercancel", onPointerUp);
   }
 }

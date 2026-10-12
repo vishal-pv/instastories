@@ -154,7 +154,10 @@
   border: 2px solid #ffffff;
   overflow: visible;
   user-select: none;
+  -webkit-user-select: none;
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+  will-change: transform;
+  transform: translate3d(0, 0, 0);
 }
 
 .builder-card:active {
@@ -179,6 +182,7 @@
   overflow: hidden;
   position: relative;
   border-radius: inherit;
+  pointer-events: none;
 }
 
 .builder-card-media-wrap img,
@@ -189,7 +193,8 @@
   pointer-events: none;
   display: block;
   transform-origin: center center;
-  transition: transform 0.05s linear;
+  /* Transitions removed for instantaneous zero-latency pan & zoom */
+  will-change: transform;
 }
 
 /* In-Card Photo Pan Mode Active */
@@ -209,15 +214,26 @@
   cursor: grab;
   touch-action: none;
   user-select: none;
+  -webkit-user-select: none;
   z-index: 35;
   display: flex;
   align-items: center;
   justify-content: center;
   transform-origin: center center;
+  will-change: transform;
 }
 
 .builder-sticker:active {
   cursor: grabbing;
+}
+
+/* Performance: Global dragging mode disables transitions and prevents cursor stutter */
+.builder-stage.is-dragging,
+.builder-stage.is-dragging * {
+  cursor: grabbing !important;
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  transition: none !important;
 }
 
 .builder-sticker.selected {

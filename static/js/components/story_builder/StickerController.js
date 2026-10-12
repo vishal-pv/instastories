@@ -180,43 +180,70 @@ export class StickerController {
   }
 
   startStickerDrag(e, el, st, stIdx) {
+    try { el.setPointerCapture(e.pointerId); } catch (_) {}
+    this.stageEl.classList.add("is-dragging");
+
     const startX = e.clientX;
     const startY = e.clientY;
     const origDx = parseFloat(el.style.left) || 0;
     const origDy = parseFloat(el.style.top) || 0;
     const dw = el.offsetWidth;
     const dh = el.offsetHeight;
+    const rot = st.rotation || 0;
+
+    let targetDx = origDx;
+    let targetDy = origDy;
+    let rafId = null;
+    let snapActiveX = false;
+    let snapActiveY = false;
 
     const onPointerMove = (moveEv) => {
       const deltaX = moveEv.clientX - startX;
       const deltaY = moveEv.clientY - startY;
 
-      let targetDx = origDx + deltaX;
-      let targetDy = origDy + deltaY;
-
       // Magnetic snapping
-      const snap = checkMagneticSnap(targetDx, targetDy, dw, dh, 6);
+      const snap = checkMagneticSnap(origDx + deltaX, origDy + deltaY, dw, dh, 6);
       targetDx = snap.dx;
       targetDy = snap.dy;
+      snapActiveX = snap.snapGuideX;
+      snapActiveY = snap.snapGuideY;
 
-      if (this.options.onMagneticGuide) {
-        this.options.onMagneticGuide(snap.snapGuideX, snap.snapGuideY);
+      if (!rafId) {
+        rafId = requestAnimationFrame(() => {
+          const moveX = targetDx - origDx;
+          const moveY = targetDy - origDy;
+          el.style.transform = `translate3d(${moveX}px, ${moveY}px, 0) rotate(${rot}deg)`;
+
+          if (this.options.onMagneticGuide) {
+            this.options.onMagneticGuide(snapActiveX, snapActiveY);
+          }
+          if (this.options.onLiveCoords) {
+            this.options.onLiveCoords(to1080X(targetDx), to1080Y(targetDy));
+          }
+          rafId = null;
+        });
+      }
+    };
+
+    const onPointerUp = () => {
+      try { el.releasePointerCapture(e.pointerId); } catch (_) {}
+      window.removeEventListener("pointermove", onPointerMove);
+      window.removeEventListener("pointerup", onPointerUp);
+      window.removeEventListener("pointercancel", onPointerUp);
+
+      if (rafId) {
+        cancelAnimationFrame(rafId);
+        rafId = null;
       }
 
+      this.stageEl.classList.remove("is-dragging");
+
+      el.style.transform = `rotate(${rot}deg)`;
       el.style.left = `${targetDx}px`;
       el.style.top = `${targetDy}px`;
 
       st.x = to1080X(targetDx);
       st.y = to1080Y(targetDy);
-
-      if (this.options.onLiveDrag) {
-        this.options.onLiveDrag(stIdx, st);
-      }
-    };
-
-    const onPointerUp = () => {
-      window.removeEventListener("pointermove", onPointerMove);
-      window.removeEventListener("pointerup", onPointerUp);
 
       if (this.options.onMagneticGuide) {
         this.options.onMagneticGuide(false, false);
@@ -228,5 +255,6 @@ export class StickerController {
 
     window.addEventListener("pointermove", onPointerMove);
     window.addEventListener("pointerup", onPointerUp);
+    window.addEventListener("pointercancel", onPointerUp);
   }
 }

@@ -30,7 +30,10 @@ export class Stage {
     this.gizmo = new TransformGizmo(
       this.stageEl,
       (transform) => this.handleGizmoTransform(transform),
-      () => this.commitHistory()
+      () => {
+        this.inspector.updateSelection(this.selectedItem, this.slideData, false);
+        this.commitHistory();
+      }
     );
 
     this.floatingToolbar = new FloatingToolbar({
@@ -44,10 +47,19 @@ export class Stage {
     this.cardCtrl = new CardController(this.stageEl, {
       onSelect: (sel) => this.selectItem(sel),
       onMagneticGuide: (sx, sy) => this.magneticGuides.update(sx, sy),
-      onLiveDrag: (idx, slot) => this.inspector.updateSelection(this.selectedItem, this.slideData, this.panModeSlotIdx === idx),
-      onDragEnd: () => this.commitHistory(),
-      onLivePan: (idx) => this.inspector.updateSelection(this.selectedItem, this.slideData, this.panModeSlotIdx === idx),
-      onPanEnd: () => this.commitHistory(),
+      onLiveCoords: (x, y) => this.inspector.updateLiveCoords(x, y),
+      onDragEnd: () => {
+        this.inspector.updateSelection(this.selectedItem, this.slideData, this.panModeSlotIdx !== null);
+        this.commitHistory();
+      },
+      onLivePan: (idx, px, py) => {
+        if (this.inspector.panXVal) this.inspector.panXVal.textContent = `${px}%`;
+        if (this.inspector.panYVal) this.inspector.panYVal.textContent = `${py}%`;
+      },
+      onPanEnd: () => {
+        this.inspector.updateSelection(this.selectedItem, this.slideData, this.panModeSlotIdx !== null);
+        this.commitHistory();
+      },
       onTogglePan: (active) => this.togglePanMode(active),
       onResetCrop: (idx) => this.resetCrop(idx)
     });
@@ -55,8 +67,11 @@ export class Stage {
     this.stickerCtrl = new StickerController(this.stageEl, {
       onSelect: (sel) => this.selectItem(sel),
       onMagneticGuide: (sx, sy) => this.magneticGuides.update(sx, sy),
-      onLiveDrag: (idx, st) => this.inspector.updateSelection(this.selectedItem, this.slideData, false),
-      onDragEnd: () => this.commitHistory(),
+      onLiveCoords: (x, y) => this.inspector.updateLiveCoords(x, y),
+      onDragEnd: () => {
+        this.inspector.updateSelection(this.selectedItem, this.slideData, false);
+        this.commitHistory();
+      },
       onAddSticker: (stData) => this.addSticker(stData)
     });
 
@@ -328,6 +343,8 @@ export class Stage {
         slot.box[1] = to1080Y(transform.top);
         slot.box[2] = to1080W(transform.width);
         slot.box[3] = to1080H(transform.height);
+        this.inspector.updateLiveCoords(slot.box[0], slot.box[1]);
+        this.inspector.updateLiveDimensions(slot.box[2], slot.box[3]);
       }
     } else if (this.selectedItem.type === "sticker") {
       const st = this.slideData.stickers[this.selectedItem.index];
@@ -338,12 +355,14 @@ export class Stage {
         st.y = to1080Y(transform.top);
         st.w = to1080W(transform.width);
         st.h = to1080H(transform.height);
+        this.inspector.updateLiveCoords(st.x, st.y);
+        this.inspector.updateLiveDimensions(st.w, st.h);
+        if (this.inspector.stickerSizeVal) this.inspector.stickerSizeVal.textContent = `${st.w}px`;
       } else if (transform.type === "rotate") {
         st.rotation = transform.rotation;
+        if (this.inspector.stickerRotVal) this.inspector.stickerRotVal.textContent = `${st.rotation}°`;
       }
     }
-
-    this.inspector.updateSelection(this.selectedItem, this.slideData, false);
   }
 
   duplicateSelected() {

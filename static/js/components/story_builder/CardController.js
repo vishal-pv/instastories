@@ -165,6 +165,9 @@ export class CardController {
   }
 
   startCardDrag(e, cardEl, slot, slotIdx) {
+    try { cardEl.setPointerCapture(e.pointerId); } catch (_) {}
+    this.stageEl.classList.add("is-dragging");
+
     const startX = e.clientX;
     const startY = e.clientY;
     const origDx = parseFloat(cardEl.style.left) || 0;
@@ -172,36 +175,61 @@ export class CardController {
     const dw = cardEl.offsetWidth;
     const dh = cardEl.offsetHeight;
 
+    let targetDx = origDx;
+    let targetDy = origDy;
+    let rafId = null;
+    let snapActiveX = false;
+    let snapActiveY = false;
+
     const onPointerMove = (moveEv) => {
       const deltaX = moveEv.clientX - startX;
       const deltaY = moveEv.clientY - startY;
 
-      let targetDx = origDx + deltaX;
-      let targetDy = origDy + deltaY;
-
       // Magnetic center snapping
-      const snap = checkMagneticSnap(targetDx, targetDy, dw, dh, 6);
+      const snap = checkMagneticSnap(origDx + deltaX, origDy + deltaY, dw, dh, 6);
       targetDx = snap.dx;
       targetDy = snap.dy;
+      snapActiveX = snap.snapGuideX;
+      snapActiveY = snap.snapGuideY;
 
-      if (this.options.onMagneticGuide) {
-        this.options.onMagneticGuide(snap.snapGuideX, snap.snapGuideY);
+      if (!rafId) {
+        rafId = requestAnimationFrame(() => {
+          // Hardware-accelerated GPU translation (ZERO layout reflow during drag)
+          const moveX = targetDx - origDx;
+          const moveY = targetDy - origDy;
+          cardEl.style.transform = `translate3d(${moveX}px, ${moveY}px, 0)`;
+
+          if (this.options.onMagneticGuide) {
+            this.options.onMagneticGuide(snapActiveX, snapActiveY);
+          }
+          if (this.options.onLiveCoords) {
+            this.options.onLiveCoords(to1080X(targetDx), to1080Y(targetDy));
+          }
+          rafId = null;
+        });
+      }
+    };
+
+    const onPointerUp = (upEv) => {
+      try { cardEl.releasePointerCapture(e.pointerId); } catch (_) {}
+      window.removeEventListener("pointermove", onPointerMove);
+      window.removeEventListener("pointerup", onPointerUp);
+      window.removeEventListener("pointercancel", onPointerUp);
+
+      if (rafId) {
+        cancelAnimationFrame(rafId);
+        rafId = null;
       }
 
+      this.stageEl.classList.remove("is-dragging");
+
+      // Commit final position to style.left & style.top
+      cardEl.style.transform = "";
       cardEl.style.left = `${targetDx}px`;
       cardEl.style.top = `${targetDy}px`;
 
       slot.box[0] = to1080X(targetDx);
       slot.box[1] = to1080Y(targetDy);
-
-      if (this.options.onLiveDrag) {
-        this.options.onLiveDrag(slotIdx, slot);
-      }
-    };
-
-    const onPointerUp = () => {
-      window.removeEventListener("pointermove", onPointerMove);
-      window.removeEventListener("pointerup", onPointerUp);
 
       if (this.options.onMagneticGuide) {
         this.options.onMagneticGuide(false, false);
@@ -213,36 +241,57 @@ export class CardController {
 
     window.addEventListener("pointermove", onPointerMove);
     window.addEventListener("pointerup", onPointerUp);
+    window.addEventListener("pointercancel", onPointerUp);
   }
 
   startPhotoPan(e, mediaEl, slot, slotIdx) {
+    try { mediaEl.setPointerCapture(e.pointerId); } catch (_) {}
+    this.stageEl.classList.add("is-dragging");
+
     const startX = e.clientX;
     const startY = e.clientY;
     const origPanX = slot.pan_x !== undefined ? slot.pan_x : 0;
     const origPanY = slot.pan_y !== undefined ? slot.pan_y : 0;
     const zoom = slot.zoom !== undefined ? slot.zoom : 1.0;
 
+    let newPanX = origPanX;
+    let newPanY = origPanY;
+    let rafId = null;
+
     const onPointerMove = (moveEv) => {
       const dx = moveEv.clientX - startX;
       const dy = moveEv.clientY - startY;
 
       // Convert pixel delta to percentage offset
-      const newPanX = clamp(Math.round(origPanX + (dx / 3.0)), -50, 50);
-      const newPanY = clamp(Math.round(origPanY + (dy / 3.0)), -50, 50);
+      newPanX = clamp(Math.round(origPanX + (dx / 3.0)), -50, 50);
+      newPanY = clamp(Math.round(origPanY + (dy / 3.0)), -50, 50);
 
-      slot.pan_x = newPanX;
-      slot.pan_y = newPanY;
-
-      mediaEl.style.transform = `scale(${zoom}) translate(${newPanX}%, ${newPanY}%)`;
-
-      if (this.options.onLivePan) {
-        this.options.onLivePan(slotIdx, newPanX, newPanY);
+      if (!rafId) {
+        rafId = requestAnimationFrame(() => {
+          mediaEl.style.transform = `scale(${zoom}) translate(${newPanX}%, ${newPanY}%)`;
+          if (this.options.onLivePan) {
+            this.options.onLivePan(slotIdx, newPanX, newPanY);
+          }
+          rafId = null;
+        });
       }
     };
 
     const onPointerUp = () => {
+      try { mediaEl.releasePointerCapture(e.pointerId); } catch (_) {}
       window.removeEventListener("pointermove", onPointerMove);
       window.removeEventListener("pointerup", onPointerUp);
+      window.removeEventListener("pointercancel", onPointerUp);
+
+      if (rafId) {
+        cancelAnimationFrame(rafId);
+        rafId = null;
+      }
+
+      this.stageEl.classList.remove("is-dragging");
+
+      slot.pan_x = newPanX;
+      slot.pan_y = newPanY;
 
       if (this.options.onPanEnd) {
         this.options.onPanEnd(slotIdx, slot);
@@ -251,5 +300,6 @@ export class CardController {
 
     window.addEventListener("pointermove", onPointerMove);
     window.addEventListener("pointerup", onPointerUp);
+    window.addEventListener("pointercancel", onPointerUp);
   }
 }
