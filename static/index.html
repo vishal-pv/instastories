@@ -179,6 +179,8 @@
           </div>
         </div>
         <div class="builder-header-actions">
+          <button id="builderUndoBtn" type="button" class="btn btn-sm btn-secondary" title="Undo (Ctrl+Z)" disabled>↩️ Undo</button>
+          <button id="builderRedoBtn" type="button" class="btn btn-sm btn-secondary" title="Redo (Ctrl+Y)" disabled>↪️ Redo</button>
           <button id="builderAddCardBtn" type="button" class="btn btn-sm btn-secondary">➕ Add Card</button>
           <button id="builderAddStickerBtn" type="button" class="btn btn-sm btn-secondary">🌟 Add Sticker</button>
           <button id="builderAddPillBtn" type="button" class="btn btn-sm btn-secondary">📍 Add Location</button>
@@ -374,6 +376,7 @@
   <!-- Toast Notifications Container -->
   <div id="toastContainer" class="toast-container"></div>
 
-  <script src="app.js"></script>
+  <!-- Modular ES6 Application Bootstrap -->
+  <script type="module" src="js/main.js"></script>
 </body>
 </html>

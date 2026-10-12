@@ -1,0 +1,60 @@
+/* ==========================================================================
+   Design Tokens & System Variables
+   ========================================================================== */
+
+:root {
+  --bg-deep: #0a0c10;
+  --bg-card: #131720;
+  --bg-card-hover: #191f2c;
+  --bg-elevated: #1e2433;
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-focus: rgba(168, 85, 247, 0.5);
+  
+  --primary: #9333ea;
+  --primary-light: #a855f7;
+  --primary-gradient: linear-gradient(135deg, #a855f7 0%, #ec4899 50%, #f97316 100%);
+  --accent-amber: #f59e0b;
+  --accent-cyan: #06b6d4;
+  --accent-green: #10b981;
+  --accent-danger: #ef4444;
+
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --text-faint: #64748b;
+  
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-full: 9999px;
+
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.5);
+  --shadow-glow: 0 0 25px rgba(168, 85, 247, 0.25);
+  --transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* Canva-Grade Transform & Gizmo Tokens */
+  --gizmo-color: #3b82f6;
+  --gizmo-glow: rgba(59, 130, 246, 0.4);
+  --guide-snap-color: #ec4899;
+  --guide-center-color: #06b6d4;
+  --handle-size: 10px;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background-color: var(--bg-deep);
+  color: var(--text-main);
+  line-height: 1.5;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  background-image: 
+    radial-gradient(circle at 10% 10%, rgba(168, 85, 247, 0.08) 0%, transparent 40%),
+    radial-gradient(circle at 90% 90%, rgba(236, 72, 153, 0.06) 0%, transparent 40%);
+  background-attachment: fixed;
+}
